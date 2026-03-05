@@ -1,0 +1,13 @@
+bin/
+obj/
+*.user
+.vs/
+
+# Local config overrides — contain real secrets
+appsettings.Development.json
+appsettings.Local.json
+
+# Local database
+*.db
+*.db-shm
+*.db-wal

@@ -1,0 +1,6 @@
+@AnimeVault.Catalog_HostAddress = http://localhost:5286
+
+GET {{AnimeVault.Catalog_HostAddress}}/api/anime
+Accept: application/json
+
+###

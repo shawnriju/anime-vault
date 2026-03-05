@@ -1,0 +1,356 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap');
+
+:root {
+  --bg-base: #080808;
+  --bg-card: #111111;
+  --bg-input: #181818;
+  --border: #222222;
+  --accent: #ff2d55;
+  --accent-dim: rgba(255, 45, 85, 0.15);
+  --text-primary: #f0f0f0;
+  --text-muted: #555555;
+  --text-secondary: #999999;
+  --radius: 6px;
+  --transition: 150ms ease;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ── Layout ── */
+.app {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem;
+}
+
+/* ── Header ── */
+.header {
+  margin-bottom: 3rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 1.5rem;
+}
+
+.header__title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 4rem;
+  letter-spacing: 0.06em;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.header__title span {
+  color: var(--accent);
+}
+
+.header__subtitle {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 300;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-top: 0.4rem;
+}
+
+/* ── Form Panel ── */
+.form-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.75rem;
+  margin-bottom: 2.5rem;
+}
+
+.form-panel__title {
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 1.25rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.form-grid--full {
+  grid-column: 1 / -1;
+}
+
+/* ── Form Controls ── */
+.input,
+.select {
+  width: 100%;
+  padding: 0.65rem 0.9rem;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-primary);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color var(--transition);
+  appearance: none;
+}
+
+.input::placeholder {
+  color: var(--text-muted);
+}
+
+.input:focus,
+.select:focus {
+  border-color: var(--accent);
+}
+
+.select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23555' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.9rem center;
+  padding-right: 2.2rem;
+  cursor: pointer;
+}
+
+.select option {
+  background: var(--bg-card);
+}
+
+/* ── Submit Button ── */
+.btn-submit {
+  grid-column: 1 / -1;
+  padding: 0.75rem;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: opacity var(--transition), transform var(--transition);
+}
+
+.btn-submit:hover:not(:disabled) {
+  opacity: 0.88;
+  transform: translateY(-1px);
+}
+
+.btn-submit:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ── Error ── */
+.error-msg {
+  color: #ff6b6b;
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+  padding: 0.6rem 0.9rem;
+  background: rgba(255, 107, 107, 0.08);
+  border-radius: var(--radius);
+  border-left: 3px solid #ff6b6b;
+}
+
+/* ── Catalog Section ── */
+.catalog-header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.catalog-header__title {
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.catalog-header__count {
+  font-size: 0.75rem;
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.catalog-empty {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  text-align: center;
+  padding: 3rem 0;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+}
+
+/* ── Anime Cards ── */
+.catalog-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.anime-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem 1.5rem;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.25rem 1rem;
+  align-items: start;
+  transition: border-color var(--transition);
+}
+
+.anime-card:hover {
+  border-color: #2a2a2a;
+}
+
+.anime-card__title {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.anime-card__year {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 300;
+}
+
+.anime-card__genre {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  grid-column: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.anime-card__description {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  grid-column: 1 / -1;
+  margin-top: 0.25rem;
+  font-weight: 300;
+}
+
+/* ── Status Badge ── */
+.status-badge {
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  white-space: nowrap;
+  align-self: start;
+  grid-row: 1;
+}
+
+.status-badge--unknown    { background: rgba(120,120,120,0.15); color: #777; }
+.status-badge--ongoing    { background: rgba(0, 200, 120, 0.12); color: #00c878; }
+.status-badge--completed  { background: rgba(100, 149, 237, 0.15); color: #6495ed; }
+.status-badge--hiatus     { background: rgba(255, 193, 7, 0.12); color: #ffc107; }
+.status-badge--cancelled  { background: rgba(255, 107, 107, 0.12); color: #ff6b6b; }
+.status-badge--upcoming   { background: rgba(200, 100, 255, 0.12); color: #c864ff; }
+
+/* ── Login Screen ── */
+.login-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 3rem 2.5rem;
+  text-align: center;
+  width: 100%;
+  max-width: 380px;
+}
+
+.login-card__sub {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin: 0.5rem 0 2rem;
+  letter-spacing: 0.05em;
+}
+
+/* ── Logout Button ── */
+.btn-logout {
+  margin-top: 0.5rem;
+  padding: 0.4rem 1rem;
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: color var(--transition), border-color var(--transition);
+}
+
+.btn-logout:hover {
+  color: var(--text-primary);
+  border-color: #444;
+}
+
+/* ── Cover Image ── */
+.anime-card {
+  display: flex;       /* override the grid layout for the card */
+  gap: 1.25rem;
+  align-items: flex-start;
+}
+
+.anime-card__cover {
+  width: 80px;
+  height: 110px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+  background: var(--bg-input);
+}
+
+.anime-card__body {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.25rem 1rem;
+  flex: 1;
+}
+
+.anime-card__top {
+  display: contents;
+}
+
+/* ── File Input ── */
+.file-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+}
+
+.file-input {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+}

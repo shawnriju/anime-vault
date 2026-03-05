@@ -1,0 +1,30 @@
+# ── .NET ──────────────────────────────────────────
+**/bin/
+**/obj/
+**/*.user
+**/.vs/
+
+# Local secrets — never commit these
+**/appsettings.Development.json
+**/appsettings.Local.json
+
+# ── Frontend ──────────────────────────────────────
+**/node_modules/
+**/dist/
+
+# Vite local env files
+**/.env.local
+**/.env.*.local
+
+# ── Lambda ────────────────────────────────────────
+AnimeVault.Lambda/package/
+AnimeVault.Lambda/lambda_function.zip
+
+# ── Local database from Phase 1 ───────────────────
+**/*.db
+**/*.db-shm
+**/*.db-wal
+
+# ── OS files ──────────────────────────────────────
+.DS_Store
+Thumbs.db
