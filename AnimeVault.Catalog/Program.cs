@@ -12,10 +12,27 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
 
-// builder.Services.AddDbContext<CatalogDbContext>(options =>
-//     options.UseSqlite("Data Source=catalog.db"));
+var awsAccessKey = builder.Configuration["AWS:AccessKey"];
+var awsSecretKey = builder.Configuration["AWS:SecretKey"];
+var awsRegion    = builder.Configuration["AWS:Region"];
 
-builder.Services.AddDefaultAWSOptions(builder.Configuration.GetAWSOptions());
+if (!string.IsNullOrEmpty(awsAccessKey) && !string.IsNullOrEmpty(awsSecretKey))
+{
+    // Explicit credentials — used on Render and other non-AWS hosting
+    var credentials = new Amazon.Runtime.BasicAWSCredentials(awsAccessKey, awsSecretKey);
+    var awsOptions   = new Amazon.Extensions.NETCore.Setup.AWSOptions
+    {
+        Credentials = credentials,
+        Region      = Amazon.RegionEndpoint.GetBySystemName(awsRegion)
+    };
+    builder.Services.AddDefaultAWSOptions(awsOptions);
+}
+else
+{
+    // Falls back to instance role or named profile — used on Beanstalk and locally
+    builder.Services.AddDefaultAWSOptions(builder.Configuration.GetAWSOptions());
+}
+
 builder.Services.AddAWSService<IAmazonDynamoDB>();
 builder.Services.AddAWSService<IAmazonS3>();
 
