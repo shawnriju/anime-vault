@@ -1,0 +1,13 @@
+{
+  "AWSEBDockerrunVersion": "1",
+  "Image": {
+    "Name": "515105386947.dkr.ecr.eu-north-1.amazonaws.com/animevault-catalog:latest",
+    "Update": "true"
+  },
+  "Ports": [
+    {
+      "ContainerPort": "8080",
+      "HostPort": "80"
+    }
+  ]
+}
