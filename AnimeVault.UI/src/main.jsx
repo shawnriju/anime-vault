@@ -5,7 +5,13 @@ import Callback from "./auth/Callback";
 import './index.css'
 import App from './App.jsx'
 
-const isCallback = window.location.pathname === "/callback";
+// Detect callback by pathname OR by presence of code/error params
+// This is more reliable than pathname alone across different hosting environments
+const params   = new URLSearchParams(window.location.search);
+const isCallback = 
+  window.location.pathname.includes("callback") ||
+  params.has("code") ||
+  params.has("error");
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
