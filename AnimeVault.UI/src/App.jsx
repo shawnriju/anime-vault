@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "./auth/AuthContext";
 import "./App.css";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5286/api/anime";
+const API_URL = `${import.meta.env.VITE_API_URL || "http://localhost:5286"}/api/anime`;
 
 const ANIME_STATUSES = [
   { value: "Unknown",   label: "Unknown" },
