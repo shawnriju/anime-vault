@@ -19,6 +19,10 @@ public class Anime
     [DynamoDBHashKey]
     public string Id { get; set; } = Guid.NewGuid().ToString();
 
+    // Marks this as the GSI partition key — enables querying by user
+    [DynamoDBGlobalSecondaryIndexHashKey("UserId-index")]
+    public string UserId { get; set; } = string.Empty;
+
     public string Title { get; set; } = string.Empty;
     public string Genre { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;

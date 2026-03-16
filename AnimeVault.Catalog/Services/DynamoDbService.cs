@@ -16,13 +16,17 @@ public class DynamoDbService
             .Build();
     }
 
-    // Scans the entire AnimeVault table and returns all items.
-    // For a small personal catalog this is fine — at scale
-    // you would use queries with indexes instead.
-    public async Task<List<Anime>> GetAllAsync()
+    // Queries the GSI directly — only returns items belonging to this user
+    public async Task<List<Anime>> GetAllAsync(string userId)
     {
-        var conditions = new List<ScanCondition>(); // empty = return everything
-        return await _context.ScanAsync<Anime>(conditions).GetRemainingAsync();
+        return await _context
+            .QueryAsync<Anime>(
+                userId,
+                new DynamoDBOperationConfig
+                {
+                    IndexName = "UserId-index"
+                })
+            .GetRemainingAsync();
     }
 
     public async Task CreateAsync(Anime anime)

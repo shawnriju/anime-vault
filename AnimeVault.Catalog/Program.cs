@@ -51,6 +51,9 @@ builder.Services.AddAuthentication("Bearer")
             ValidateIssuer           = true,
             ValidateAudience         = false,  // Cognito access tokens don't include audience
             ValidateLifetime         = true,
+
+            NameClaimType = "sub",  // This maps the 'sub' claim to User.Identity.Name
+            RoleClaimType = "cognito:groups",  // If you use roles/groups
         };
     });
 
