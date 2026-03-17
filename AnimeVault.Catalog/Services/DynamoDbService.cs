@@ -29,8 +29,30 @@ public class DynamoDbService
             .GetRemainingAsync();
     }
 
+    // Loads a single item by ID and verifies it belongs to the requesting user
+    public async Task<Anime?> GetByIdAsync(string id, string userId)
+    {
+        var anime = await _context.LoadAsync<Anime>(id);
+        if (anime == null || anime.UserId != userId) return null;
+        return anime;
+    }
+
     public async Task CreateAsync(Anime anime)
     {
         await _context.SaveAsync(anime);
     }
+
+    // Get the item first, verify ownership then delete it
+    // Returns false if item doesn't exist or doesn't belong to this user
+    public async Task<bool> DeleteAsync(string id, string userId)
+    {
+        var anime = await _context.LoadAsync<Anime>(id);
+
+        if (anime == null)           return false;
+        if (anime.UserId != userId)  return false;
+
+        await _context.DeleteAsync<Anime>(id);
+        return true;
+    }
+
 }

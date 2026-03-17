@@ -84,6 +84,28 @@ public class AnimeController : ControllerBase
         await _dynamo.CreateAsync(anime);
         return CreatedAtAction(nameof(GetAll), new { id = anime.Id }, anime);
     }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(string id)
+    {
+        var userId = GetUserId();
+
+        // Load the item first so we can get the image URL before deleting
+        var anime = await _dynamo.GetByIdAsync(id, userId);
+        if (anime == null) return NotFound();
+
+        // Delete S3 images if they exist
+        if (!string.IsNullOrEmpty(anime.CoverImageUrl))
+        {
+            await _s3.DeleteCoverAsync(anime.CoverImageUrl);
+        }
+
+        // Delete from DynamoDB
+        await _dynamo.DeleteAsync(id, userId);
+
+        return NoContent();
+    }
+
 }
 
 // Separate class for the form request — keeps the model clean

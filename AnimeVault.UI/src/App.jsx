@@ -42,7 +42,10 @@ function StatusBadge({ status }) {
   );
 }
 
-function AnimeCard({ anime }) {
+function AnimeCard({ anime, token, onDeleted }) {
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
   const thumbnailUrl = anime.coverImageUrl
     ? anime.coverImageUrl.replace("/covers/", "/thumbnails/")
     : null;
@@ -54,6 +57,28 @@ function AnimeCard({ anime }) {
       e.target.src = anime.coverImageUrl;
     }
   }
+
+  async function handleDelete() {
+    setDeleting(true);
+    try {
+      const res = await fetch(`${API_URL}/${anime.id}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) throw new Error("Failed to delete entry.");
+
+      onDeleted();
+    } catch (err) {
+      console.error("Error deleting anime:", err);
+    } finally {
+      setDeleting(false);
+      setConfirmDelete(false);
+    }
+  }
+
 
   return (
     <div className="anime-card">
@@ -73,6 +98,37 @@ function AnimeCard({ anime }) {
         <span className="anime-card__genre">{anime.genre}</span>
         <span className="anime-card__year">{anime.releaseYear}</span>
         <p className="anime-card__description">{anime.description}</p>
+
+        {/* Delete controls */}
+        <div className="anime-card__actions">
+          {!confirmDelete ? (
+            <button
+              className="btn-delete"
+              onClick={() => setConfirmDelete(true)}
+            >
+              Delete
+            </button>
+          ) : (
+            <div className="delete-confirm">
+              <span className="delete-confirm__text">Are you sure?</span>
+              <button
+                className="btn-delete-confirm"
+                onClick={handleDelete}
+                disabled={deleting}
+              >
+                {deleting ? "Deleting..." : "Yes, delete"}
+              </button>
+              <button
+                className="btn-delete-cancel"
+                onClick={() => setConfirmDelete(false)}
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+            </div>
+          )}
+        </div>
+
       </div>
     </div>
   );
@@ -203,7 +259,7 @@ function AnimeForm({ onCreated, token }) {
   );
 }
 
-function CatalogList({ animes }) {
+function CatalogList({ animes, token, onDeleted }) {
   return (
     <section>
       <div className="catalog-header">
@@ -216,7 +272,12 @@ function CatalogList({ animes }) {
       ) : (
         <div className="catalog-list">
           {animes.map((anime) => (
-            <AnimeCard key={anime.id} anime={anime} />
+            <AnimeCard
+              key={anime.id}
+              anime={anime}
+              token={token}
+              onDeleted={onDeleted}
+            />
           ))}
         </div>
       )}
@@ -272,7 +333,11 @@ export default function App() {
       </header>
 
       <AnimeForm onCreated={fetchAnimes} token={token} />
-      <CatalogList animes={animes} />
+      <CatalogList 
+        animes={animes}
+        token={token}
+        onDeleted={fetchAnimes} 
+      />
     </div>
   );
 }
