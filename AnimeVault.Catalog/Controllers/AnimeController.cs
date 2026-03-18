@@ -85,6 +85,81 @@ public class AnimeController : ControllerBase
         return CreatedAtAction(nameof(GetAll), new { id = anime.Id }, anime);
     }
 
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(string id, [FromForm] AnimeFormRequest request)
+    {
+        var userId = GetUserId();
+
+        // Load existing item to get the current cover URL before updating
+        var existing = await _dynamo.GetByIdAsync(id, userId);
+        if (existing == null) return NotFound();
+
+        // First upload the new image
+        string newImageUrl = null;
+        if (request.CoverImage is { Length: > 0 })
+        {
+            await using var stream = request.CoverImage.OpenReadStream();
+            try
+            {
+                newImageUrl = await _s3.UploadCoverAsync(stream, request.CoverImage.ContentType);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Failed to upload image");
+            }
+        }
+
+        // Update the entity with the new URL
+        var updated = new Anime
+        {
+            Title = request.Title,
+            Genre = request.Genre,
+            Description = request.Description,
+            ReleaseYear = request.ReleaseYear,
+            Status = request.Status,
+            CoverImageUrl = newImageUrl ?? existing.CoverImageUrl // Keep old if upload failed
+        };
+
+        // Update database
+        var success = await _dynamo.UpdateAsync(id, userId, updated);
+        if (!success) 
+        {
+            if (newImageUrl != null)
+            {
+                try
+                {
+                    await _s3.DeleteCoverAsync(newImageUrl);
+                    //_logger.LogInformation("Cleaned up orphaned image {Url} after failed database update", newImageUrl);
+                }
+                catch (Exception ex)
+                {
+                    //_logger.LogError(ex, "Failed to delete orphaned image {Url}", newImageUrl);
+                    // Don't throw - we already have a failure to report
+                }
+            }
+            return NotFound();
+        }
+
+        //Database update succeeded - NOW we can safely delete the old image
+        if (newImageUrl != null && !string.IsNullOrEmpty(existing.CoverImageUrl))
+        {
+            try
+            {
+                await _s3.DeleteCoverAsync(existing.CoverImageUrl);
+                //_logger.LogInformation("Successfully deleted old image {Url}", existing.CoverImageUrl);
+            }
+            catch (Exception ex)
+            {
+                // Log but don't fail the request - database is already updated
+                //_logger.LogWarning(ex, "Failed to delete old cover image {Url}, but database update succeeded", existing.CoverImageUrl);
+                // Still return success to the user
+            }
+        }
+
+        return NoContent();
+    }
+
+
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(string id)
     {

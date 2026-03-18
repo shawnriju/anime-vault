@@ -92,6 +92,12 @@ body {
   grid-column: 1 / -1;
 }
 
+.form-actions {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.75rem;
+}
+
 /* ── Form Controls ── */
 .input,
 .select {
@@ -155,6 +161,25 @@ body {
   cursor: not-allowed;
 }
 
+/* ── Cancel Button ── */
+.btn-cancel {
+  padding: 0.75rem 1.25rem;
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: color var(--transition), border-color var(--transition);
+  white-space: nowrap;
+}
+
+.btn-cancel:hover:not(:disabled) {
+  color: var(--text-primary);
+  border-color: #444;
+}
+
 /* ── Error ── */
 .error-msg {
   color: #ff6b6b;
@@ -164,6 +189,24 @@ body {
   background: rgba(255, 107, 107, 0.08);
   border-radius: var(--radius);
   border-left: 3px solid #ff6b6b;
+}
+
+/* ── Edit Button ── */
+.btn-edit {
+  padding: 0.3rem 0.8rem;
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: color var(--transition), border-color var(--transition);
+}
+
+.btn-edit:hover {
+  color: var(--accent);
+  border-color: var(--accent);
 }
 
 /* ── Catalog Section ── */

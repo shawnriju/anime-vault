@@ -42,6 +42,34 @@ public class DynamoDbService
         await _context.SaveAsync(anime);
     }
 
+    public async Task<bool> UpdateAsync(string id,string userId, Anime updated)
+    {
+        var existing = await _context.LoadAsync<Anime>(id); 
+        if(existing == null){
+            throw new KeyNotFoundException($"Anime with ID:{id} not found");
+        }
+        if(existing.UserId != userId){
+            throw new UnauthorizedAccessException($"You are not authorized to update this anime");
+        }
+        
+        // Id, UserId, and CreatedAt are intentionally preserved
+        existing.Title        = updated.Title;
+        existing.Genre        = updated.Genre;
+        existing.Description  = updated.Description;
+        existing.ReleaseYear  = updated.ReleaseYear;
+        existing.Status       = updated.Status;
+
+        // Only update the cover image if a new one was provided
+        if (!string.IsNullOrEmpty(updated.CoverImageUrl))
+        {
+            existing.CoverImageUrl = updated.CoverImageUrl;
+        }
+
+        await _context.SaveAsync(existing);
+        return true;
+
+    }
+
     // Get the item first, verify ownership then delete it
     // Returns false if item doesn't exist or doesn't belong to this user
     public async Task<bool> DeleteAsync(string id, string userId)

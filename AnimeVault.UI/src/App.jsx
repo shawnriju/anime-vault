@@ -42,7 +42,7 @@ function StatusBadge({ status }) {
   );
 }
 
-function AnimeCard({ anime, token, onDeleted }) {
+function AnimeCard({ anime, token, onDeleted, onEdit }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
@@ -99,45 +99,82 @@ function AnimeCard({ anime, token, onDeleted }) {
         <span className="anime-card__year">{anime.releaseYear}</span>
         <p className="anime-card__description">{anime.description}</p>
 
-        {/* Delete controls */}
+        {/* Edit and Delete controls */}
         <div className="anime-card__actions">
-          {!confirmDelete ? (
+        <button
+          className="btn-edit"
+          onClick={() => onEdit(anime)}
+        >
+          Edit
+        </button>
+
+        {!confirmDelete ? (
+          <button
+            className="btn-delete"
+            onClick={() => setConfirmDelete(true)}
+          >
+            Delete
+          </button>
+        ) : (
+          <div className="delete-confirm">
+            <span className="delete-confirm__text">Are you sure?</span>
             <button
-              className="btn-delete"
-              onClick={() => setConfirmDelete(true)}
+              className="btn-delete-confirm"
+              onClick={handleDelete}
+              disabled={deleting}
             >
-              Delete
+              {deleting ? "Deleting..." : "Yes, delete"}
             </button>
-          ) : (
-            <div className="delete-confirm">
-              <span className="delete-confirm__text">Are you sure?</span>
-              <button
-                className="btn-delete-confirm"
-                onClick={handleDelete}
-                disabled={deleting}
-              >
-                {deleting ? "Deleting..." : "Yes, delete"}
-              </button>
-              <button
-                className="btn-delete-cancel"
-                onClick={() => setConfirmDelete(false)}
-                disabled={deleting}
-              >
-                Cancel
-              </button>
-            </div>
-          )}
-        </div>
+            <button
+              className="btn-delete-cancel"
+              onClick={() => setConfirmDelete(false)}
+              disabled={deleting}
+            >
+              Cancel
+            </button>
+          </div>
+        )}
+      </div>
 
       </div>
     </div>
   );
 }
 
-function AnimeForm({ onCreated, token }) {
-  const [form, setForm] = useState(EMPTY_FORM);
+function AnimeForm({ onCreated, onCancelled, token, editingAnime = null }) {
+  const isEditing = editingAnime !== null;
+
+  const [form, setForm] = useState(
+    isEditing ? {
+      title:       editingAnime.title,
+      genre:       editingAnime.genre,
+      description: editingAnime.description,
+      releaseYear: editingAnime.releaseYear,
+      status:      editingAnime.status,
+      coverImage:  null,
+    }
+    : EMPTY_FORM
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // When editingAnime changes (user clicks edit on a different card),
+  // reset the form to the new entry's values
+  useEffect(() => {
+    if (editingAnime) {
+      setForm({
+        title:       editingAnime.title,
+        genre:       editingAnime.genre,
+        description: editingAnime.description,
+        releaseYear: editingAnime.releaseYear,
+        status:      editingAnime.status,
+        coverImage:  null,
+      });
+    } else {
+      setForm(EMPTY_FORM);
+    }
+    setError(null);
+  }, [editingAnime]);
 
   function handleChange(e) {
     const { name, value } = e.target;
@@ -161,8 +198,12 @@ function AnimeForm({ onCreated, token }) {
         formData.append("coverImage", form.coverImage);
       }
 
-      const res = await fetch(API_URL, {
-        method: "POST",
+      // PUT for edit, POST for create
+      const url    = isEditing ? `${API_URL}/${editingAnime.id}` : API_URL;
+      const method = isEditing ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method: method,
         headers: {
           // No Content-Type here — fetch sets it automatically for FormData
           "Authorization": `Bearer ${token}`,
@@ -171,7 +212,8 @@ function AnimeForm({ onCreated, token }) {
       });
 
       if (!res.ok) throw new Error(
-        res.status === 401 ? "Unauthorised — token may have expired." : "Failed to create entry."
+        res.status === 401 ? "Unauthorised — token may have expired." : 
+        isEditing ? "Failed to update entry." : "Failed to create entry."
       );
 
       setForm(EMPTY_FORM);
@@ -187,7 +229,9 @@ function AnimeForm({ onCreated, token }) {
 
   return (
     <div className="form-panel">
-      <p className="form-panel__title">New Entry</p>
+      <p className="form-panel__title">
+        {isEditing ? "Edit Entry" : "New Entry"}
+      </p>
 
       {error && <p className="error-msg">{error}</p>}
 
@@ -235,7 +279,9 @@ function AnimeForm({ onCreated, token }) {
         />
         <div className="form-grid--full">
           <label className="file-label">
-            Cover Image (optional)
+            {isEditing
+              ? "Cover Image (optional — leave empty to keep existing)"
+              : "Cover Image (optional)"}
             <input
               className="file-input"
               type="file"
@@ -247,19 +293,35 @@ function AnimeForm({ onCreated, token }) {
           </label>
         </div>
 
-        <button
-          className="btn-submit"
-          onClick={handleSubmit}
-          disabled={loading}
-        >
-          {loading ? "Adding..." : "Add to Vault"}
-        </button>
+        <div className="form-actions form-grid--full">
+          <button
+            className="btn-submit"
+            onClick={handleSubmit}
+            disabled={loading}
+          >
+            {loading
+              ? isEditing ? "Saving..." : "Adding..."
+              : isEditing ? "Save Changes" : "Add to Vault"}
+          </button>
+
+          {/* Cancel button only shown when editing */}
+          {isEditing && (
+            <button
+              className="btn-cancel"
+              onClick={onCancelled}
+              disabled={loading}
+            >
+              Cancel
+            </button>
+          )}
+        </div>
+
       </div>
     </div>
   );
 }
 
-function CatalogList({ animes, token, onDeleted }) {
+function CatalogList({ animes, token, onDeleted, onEdit }) {
   return (
     <section>
       <div className="catalog-header">
@@ -277,6 +339,7 @@ function CatalogList({ animes, token, onDeleted }) {
               anime={anime}
               token={token}
               onDeleted={onDeleted}
+              onEdit={onEdit}
             />
           ))}
         </div>
@@ -302,6 +365,7 @@ function LoginScreen({ onLogin }) {
 export default function App() {
   const { token, login, logout, loading } = useAuth();
   const [animes, setAnimes] = useState([]);
+  const [editingAnime, setEditingAnime]   = useState(null);
 
   async function fetchAnimes() {
     try {
@@ -313,6 +377,21 @@ export default function App() {
     } catch(err) {
       console.error("Could not reach the API.", err);
     }
+  }
+
+  function handleEdit(anime) {
+    setEditingAnime(anime);
+    // Scroll to top so the form is visible
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function handleCancelled() {
+    setEditingAnime(null);
+  }
+
+  function handleCreated() {
+    setEditingAnime(null);
+    fetchAnimes();
   }
 
   useEffect(() => {
@@ -332,11 +411,18 @@ export default function App() {
         <button className="btn-logout" onClick={logout}>Sign out</button>
       </header>
 
-      <AnimeForm onCreated={fetchAnimes} token={token} />
-      <CatalogList 
+      <AnimeForm
+        onCreated={handleCreated}
+        onCancelled={handleCancelled}
+        token={token}
+        editingAnime={editingAnime}
+      />
+
+      <CatalogList
         animes={animes}
         token={token}
-        onDeleted={fetchAnimes} 
+        onDeleted={fetchAnimes}
+        onEdit={handleEdit}
       />
     </div>
   );
