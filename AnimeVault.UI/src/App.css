@@ -89,6 +89,7 @@ body {
 }
 
 .navbar__title--accent {
+  font-family: 'Bebas Neue', sans-serif;
   color: var(--accent);
 }
 
@@ -1031,7 +1032,8 @@ body {
   margin-bottom: 0.5rem;
 }
 
-.login-card__title--accent { color: var(--accent); }
+.login-card__title--accent { 
+  color: var(--accent); }
 
 .login-card__tagline {
   font-size: 0.83rem;

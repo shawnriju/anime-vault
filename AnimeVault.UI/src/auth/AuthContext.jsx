@@ -53,7 +53,7 @@ export function AuthProvider({ children }) {
 
     const params = new URLSearchParams({
       client_id:  cognitoConfig.ClientId,
-      logout_uri: "http://localhost:5173",
+      logout_uri: cognitoConfig.LogoutUri,
     });
     window.location.href = `${cognitoConfig.Domain}/logout?${params}`;
   }

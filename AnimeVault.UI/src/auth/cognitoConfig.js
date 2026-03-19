@@ -3,4 +3,5 @@ export const cognitoConfig = {
   ClientId:    import.meta.env.VITE_COGNITO_CLIENT_ID,
   Domain:      import.meta.env.VITE_COGNITO_DOMAIN,
   RedirectUri: import.meta.env.VITE_COGNITO_REDIRECT_URI,
+  LogoutUri:   import.meta.env.VITE_COGNITO_LOGOUT_URI,
 };
