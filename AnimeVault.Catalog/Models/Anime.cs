@@ -25,7 +25,9 @@ public class Anime
 
     public string Title { get; set; } = string.Empty;
     public string Genre { get; set; } = string.Empty;
+    public string MediaType  { get; set; } = "Movie";  
     public string Description { get; set; } = string.Empty;
+    public string Notes      { get; set; } = string.Empty; 
     public int ReleaseYear { get; set; }
     public string Status { get; set; } = "Unknown"; 
     public string CoverImageUrl { get; set; } = string.Empty;

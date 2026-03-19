@@ -65,10 +65,12 @@ public class AnimeController : ControllerBase
         {
             UserId      = userId,
             Title       = request.Title,
-            Genre       = request.Genre,
-            Description = request.Description,
-            ReleaseYear = request.ReleaseYear,
+            MediaType   = request.MediaType,
             Status      = request.Status,
+            Genre       = request.Genre       ?? string.Empty,
+            Description = request.Description ?? string.Empty,
+            Notes       = request.Notes       ?? string.Empty,
+            ReleaseYear = request.ReleaseYear ?? 0,
         };
 
         // Upload cover image to S3 if one was provided
@@ -112,11 +114,13 @@ public class AnimeController : ControllerBase
         // Update the entity with the new URL
         var updated = new Anime
         {
-            Title = request.Title,
-            Genre = request.Genre,
-            Description = request.Description,
-            ReleaseYear = request.ReleaseYear,
-            Status = request.Status,
+            Title       = request.Title,
+            MediaType   = request.MediaType,
+            Status      = request.Status,
+            Genre       = request.Genre       ?? string.Empty,
+            Description = request.Description ?? string.Empty,
+            Notes       = request.Notes       ?? string.Empty,
+            ReleaseYear = request.ReleaseYear ?? 0,
             CoverImageUrl = newImageUrl ?? existing.CoverImageUrl // Keep old if upload failed
         };
 
@@ -188,9 +192,12 @@ public class AnimeController : ControllerBase
 public class AnimeFormRequest
 {
     public string Title       { get; set; } = string.Empty;
-    public string Genre       { get; set; } = string.Empty;
-    public string Description { get; set; } = string.Empty;
-    public int    ReleaseYear { get; set; }
-    public string Status      { get; set; } = "Unknown";
+    public string MediaType   { get; set; } = "Movie";  
+    public string Status      { get; set; } = "Plan to Watch";
+
+    public string? Genre       { get; set; } = string.Empty;
+    public string? Description { get; set; } = string.Empty;
+    public string? Notes       { get; set; } = string.Empty; 
+    public int?    ReleaseYear { get; set; }
     public IFormFile? CoverImage { get; set; }
 }

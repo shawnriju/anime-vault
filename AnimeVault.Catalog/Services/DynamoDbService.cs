@@ -58,6 +58,8 @@ public class DynamoDbService
         existing.Description  = updated.Description;
         existing.ReleaseYear  = updated.ReleaseYear;
         existing.Status       = updated.Status;
+        existing.MediaType   = updated.MediaType;
+        existing.Notes       = updated.Notes; 
 
         // Only update the cover image if a new one was provided
         if (!string.IsNullOrEmpty(updated.CoverImageUrl))
