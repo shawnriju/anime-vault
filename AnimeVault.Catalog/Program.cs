@@ -35,9 +35,12 @@ else
 
 builder.Services.AddAWSService<IAmazonDynamoDB>();
 builder.Services.AddAWSService<IAmazonS3>();
+builder.Services.AddScoped<Amazon.DynamoDBv2.DataModel.IDynamoDBContext, Amazon.DynamoDBv2.DataModel.DynamoDBContext>();
 
-builder.Services.AddScoped<DynamoDbService>();
-builder.Services.AddScoped<S3Service>();
+builder.Services.AddScoped<IDynamoDbService, DynamoDbService>();
+builder.Services.AddScoped<IS3Service, S3Service>();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IUserContextService, UserContextService>();
 
 
 builder.Services.AddAuthentication("Bearer")

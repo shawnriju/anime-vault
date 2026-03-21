@@ -3,7 +3,14 @@ using Amazon.S3.Transfer;
 
 namespace AnimeVault.Catalog.Services;
 
-public class S3Service
+public interface IS3Service
+{
+    Task<string> UploadCoverAsync(Stream fileStream, string contentType);
+    Task DeleteCoverAsync(string coverImageUrl);
+}
+
+
+public class S3Service : IS3Service
 {
     private readonly IAmazonS3 _s3Client;
     private readonly string _bucketName;

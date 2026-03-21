@@ -4,6 +4,7 @@ using AnimeVault.Catalog.Models;
 using AnimeVault.Catalog.Services;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+using System.ComponentModel.DataAnnotations;
 
 namespace AnimeVault.Catalog.Controllers;
 
@@ -12,177 +13,177 @@ namespace AnimeVault.Catalog.Controllers;
 [Route("api/[controller]")]
 public class AnimeController : ControllerBase
 {
-    private readonly DynamoDbService _dynamo;
-    private readonly S3Service       _s3;
+    private readonly IDynamoDbService _dynamo;
+    private readonly IS3Service       _s3;
+    private readonly IUserContextService _userContextService;
 
-    public AnimeController(DynamoDbService dynamo, S3Service s3)
+    public AnimeController(IDynamoDbService dynamo, IS3Service s3, IUserContextService userContextService)
     {
         _dynamo = dynamo;
         _s3     = s3;
+        _userContextService = userContextService;
     }
 
-    private string GetUserId()
-    {
-        var userId = User.Identity?.Name;
-        
-        if (!string.IsNullOrEmpty(userId))
-        {
-            return userId;
-        }
-        
-        // Fallback: try multiple claim types
-        userId = User.FindFirstValue("sub")
-            ?? User.FindFirstValue(ClaimTypes.NameIdentifier)
-            ?? User.FindFirstValue("cognito:username")
-            ?? User.FindFirstValue("username");
-        
-        if (userId == null)
-        {
-            // Log all available claims for debugging
-            var claims = User.Claims.Select(c => $"{c.Type}: {c.Value}");
-            throw new UnauthorizedAccessException(
-                $"No user ID claim found. Available claims: {string.Join(", ", claims)}"
-            );
-        }
-        
-        return userId;
-    }
 
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var userId = GetUserId();
-        var animes = await _dynamo.GetAllAsync(userId);
-        return Ok(animes);
+        try{
+            var userId = _userContextService.GetUserId();
+            var animes = await _dynamo.GetAllAsync(userId);
+            return Ok(animes);
+        }
+        catch(UnauthorizedAccessException ex){
+            return Unauthorized(ex.Message);
+        }
+        catch(Exception ex){
+            return StatusCode(500, ex.Message);
+        }
     }
 
     [HttpPost]
     public async Task<IActionResult> Create([FromForm] AnimeFormRequest request)
     {
-        var userId = GetUserId();
+        try {
+            var userId = _userContextService.GetUserId();
 
-        var anime = new Anime
-        {
-            UserId      = userId,
-            Title       = request.Title,
-            MediaType   = request.MediaType,
-            Status      = request.Status,
-            Genre       = request.Genre       ?? string.Empty,
-            Description = request.Description ?? string.Empty,
-            Notes       = request.Notes       ?? string.Empty,
-            ReleaseYear = request.ReleaseYear ?? 0,
-        };
+            var anime = new Anime
+            {
+                UserId      = userId,
+                Title       = request.Title,
+                MediaType   = request.MediaType,
+                Status      = request.Status,
+                Genre       = request.Genre       ?? string.Empty,
+                Description = request.Description ?? string.Empty,
+                Notes       = request.Notes       ?? string.Empty,
+                ReleaseYear = request.ReleaseYear ?? 0,
+            };
 
-        // Upload cover image to S3 if one was provided
-        if (request.CoverImage is { Length: > 0 })
-        {
-            await using var stream = request.CoverImage.OpenReadStream();
-            anime.CoverImageUrl = await _s3.UploadCoverAsync(
-                stream,
-                request.CoverImage.ContentType
-            );
+            // Upload cover image to S3 if one was provided
+            if (request.CoverImage is { Length: > 0 })
+            {
+                await using var stream = request.CoverImage.OpenReadStream();
+                anime.CoverImageUrl = await _s3.UploadCoverAsync(
+                    stream,
+                    request.CoverImage.ContentType
+                );
+            }
+
+            await _dynamo.CreateAsync(anime);
+            return CreatedAtAction(nameof(GetAll), new { id = anime.Id }, anime);
         }
-
-        await _dynamo.CreateAsync(anime);
-        return CreatedAtAction(nameof(GetAll), new { id = anime.Id }, anime);
+        catch(UnauthorizedAccessException ex){
+            return Unauthorized(ex.Message);
+        }
+        catch(Exception ex){
+            return StatusCode(500, ex.Message);
+        }
     }
 
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(string id, [FromForm] AnimeFormRequest request)
     {
-        var userId = GetUserId();
-
-        // Load existing item to get the current cover URL before updating
-        var existing = await _dynamo.GetByIdAsync(id, userId);
-        if (existing == null) return NotFound();
-
-        // First upload the new image
-        string newImageUrl = null;
-        if (request.CoverImage is { Length: > 0 })
+        try 
         {
-            await using var stream = request.CoverImage.OpenReadStream();
-            try
+            var userId = _userContextService.GetUserId();
+
+            // Load existing item to get the current cover URL before updating
+            var existing = await _dynamo.GetByIdAsync(id, userId);
+            if (existing == null) return NotFound();
+
+            // First upload the new image
+            string? newImageUrl = null;
+            if (request.CoverImage is { Length: > 0 })
             {
+                await using var stream = request.CoverImage.OpenReadStream();
                 newImageUrl = await _s3.UploadCoverAsync(stream, request.CoverImage.ContentType);
             }
-            catch (Exception ex)
+
+            // Update the entity with the new URL
+            var updated = new Anime
             {
-                return StatusCode(500, "Failed to upload image");
+                Title       = request.Title,
+                MediaType   = request.MediaType,
+                Status      = request.Status,
+                Genre       = request.Genre       ?? string.Empty,
+                Description = request.Description ?? string.Empty,
+                Notes       = request.Notes       ?? string.Empty,
+                ReleaseYear = request.ReleaseYear ?? 0,
+                CoverImageUrl = newImageUrl ?? existing.CoverImageUrl // Keep old if upload failed
+            };
+
+            // Update database
+            var success = await _dynamo.UpdateAsync(id, userId, updated);
+            if (!success) 
+            {
+                if (newImageUrl != null)
+                {
+                    try
+                    {
+                        await _s3.DeleteCoverAsync(newImageUrl);
+                    }
+                    catch
+                    {
+                        // Clean-up failed, not much we can do here
+                    }
+                }
+                return NotFound();
             }
-        }
 
-        // Update the entity with the new URL
-        var updated = new Anime
-        {
-            Title       = request.Title,
-            MediaType   = request.MediaType,
-            Status      = request.Status,
-            Genre       = request.Genre       ?? string.Empty,
-            Description = request.Description ?? string.Empty,
-            Notes       = request.Notes       ?? string.Empty,
-            ReleaseYear = request.ReleaseYear ?? 0,
-            CoverImageUrl = newImageUrl ?? existing.CoverImageUrl // Keep old if upload failed
-        };
-
-        // Update database
-        var success = await _dynamo.UpdateAsync(id, userId, updated);
-        if (!success) 
-        {
-            if (newImageUrl != null)
+            //Database update succeeded - NOW we can safely delete the old image
+            if (newImageUrl != null && !string.IsNullOrEmpty(existing.CoverImageUrl))
             {
                 try
                 {
-                    await _s3.DeleteCoverAsync(newImageUrl);
-                    //_logger.LogInformation("Cleaned up orphaned image {Url} after failed database update", newImageUrl);
+                    await _s3.DeleteCoverAsync(existing.CoverImageUrl);
                 }
-                catch (Exception ex)
+                catch
                 {
-                    //_logger.LogError(ex, "Failed to delete orphaned image {Url}", newImageUrl);
-                    // Don't throw - we already have a failure to report
+                    // Log would go here - but don't fail the request
                 }
             }
-            return NotFound();
-        }
 
-        //Database update succeeded - NOW we can safely delete the old image
-        if (newImageUrl != null && !string.IsNullOrEmpty(existing.CoverImageUrl))
-        {
-            try
-            {
-                await _s3.DeleteCoverAsync(existing.CoverImageUrl);
-                //_logger.LogInformation("Successfully deleted old image {Url}", existing.CoverImageUrl);
-            }
-            catch (Exception ex)
-            {
-                // Log but don't fail the request - database is already updated
-                //_logger.LogWarning(ex, "Failed to delete old cover image {Url}, but database update succeeded", existing.CoverImageUrl);
-                // Still return success to the user
-            }
+            return NoContent();
         }
-
-        return NoContent();
+        catch(UnauthorizedAccessException ex){
+            return Unauthorized(ex.Message);
+        }
+        catch(KeyNotFoundException ex){
+            return NotFound(ex.Message);
+        }
+        catch(Exception ex){
+            return StatusCode(500, ex.Message);
+        }
     }
 
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(string id)
     {
-        var userId = GetUserId();
+        try {
+            var userId = _userContextService.GetUserId();
 
-        // Load the item first so we can get the image URL before deleting
-        var anime = await _dynamo.GetByIdAsync(id, userId);
-        if (anime == null) return NotFound();
+            // Load the item first so we can get the image URL before deleting
+            var anime = await _dynamo.GetByIdAsync(id, userId);
+            if (anime == null) return NotFound();
 
-        // Delete S3 images if they exist
-        if (!string.IsNullOrEmpty(anime.CoverImageUrl))
-        {
-            await _s3.DeleteCoverAsync(anime.CoverImageUrl);
+            // Delete S3 and DynamoDB in parallel
+            var s3Task = string.IsNullOrEmpty(anime.CoverImageUrl) 
+                ? Task.CompletedTask 
+                : _s3.DeleteCoverAsync(anime.CoverImageUrl);
+                
+            var dbTask = _dynamo.DeleteAsync(id, userId);
+
+            await Task.WhenAll(s3Task, dbTask);
+
+            return NoContent();
         }
-
-        // Delete from DynamoDB
-        await _dynamo.DeleteAsync(id, userId);
-
-        return NoContent();
+        catch(UnauthorizedAccessException ex){
+            return Unauthorized(ex.Message);
+        }
+        catch(Exception ex){
+            return StatusCode(500, ex.Message);
+        }
     }
 
 }
@@ -191,13 +192,26 @@ public class AnimeController : ControllerBase
 // and handles the file upload field alongside text fields
 public class AnimeFormRequest
 {
+    [Required]
+    [MaxLength(100)]
     public string Title       { get; set; } = string.Empty;
+
+    [Required]
     public string MediaType   { get; set; } = "Movie";  
+    
+    [Required]
     public string Status      { get; set; } = "Plan to Watch";
 
+    [MaxLength(150)]
     public string? Genre       { get; set; } = string.Empty;
+
+    [MaxLength(2000)]
     public string? Description { get; set; } = string.Empty;
+
+    [MaxLength(1000)]
     public string? Notes       { get; set; } = string.Empty; 
+
     public int?    ReleaseYear { get; set; }
+    
     public IFormFile? CoverImage { get; set; }
 }
