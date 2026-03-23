@@ -1,4 +1,4 @@
-export function LoginScreen({ onLogin }) {
+export function LoginScreen({ onLogin, onDemo }) {
   return (
     <div className="login-screen">
       <div className="login-card">
@@ -29,6 +29,9 @@ export function LoginScreen({ onLogin }) {
         </div>
         <button className="btn-login" onClick={onLogin}>
           Sign in to continue
+        </button>
+        <button className="btn-demo" onClick={() => onDemo()}>
+          View Demo
         </button>
         <p className="login-card__footer">
           New here? You can sign up on the next screen.

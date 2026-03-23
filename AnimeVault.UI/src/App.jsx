@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useState } from "react";
 import { useAuth } from "./auth/AuthContext";
 import { useAnimeCatalog } from "./hooks/useAnimeCatalog";
 import { FormModal } from "./components/common/Modal";
@@ -11,6 +11,7 @@ const MediaForm = lazy(() => import("./features/catalog/MediaForm").then(module 
 
 export default function App() {
   const { token, login, logout, loading: authLoading } = useAuth();
+  const [isDemo, setIsDemo] = useState(false);
   const {
     items,
     isLoading,
@@ -21,10 +22,13 @@ export default function App() {
     handleAddClick,
     handleModalClose,
     handleItemChanged,
-  } = useAnimeCatalog(token);
+  } = useAnimeCatalog(token, isDemo);
 
   if (authLoading) return null;
-  if (!token) return <LoginScreen onLogin={login} />;
+
+  if (!token && !isDemo) {
+    return <LoginScreen onLogin={login} onDemo={() => setIsDemo(true)} />;
+  }
 
   return (
     <div className="app">
@@ -44,9 +48,15 @@ export default function App() {
             <span className="btn-add__icon">＋</span>
             Add Title
           </button>
-          <button className="btn-logout" onClick={logout}>
-            Sign out
-          </button>
+          {isDemo ? (
+            <button className="btn-logout" onClick={() => setIsDemo(false)}>
+              Exit Demo
+            </button>
+          ) : (
+            <button className="btn-logout" onClick={logout}>
+              Sign out
+            </button>
+          )}
         </div>
       </nav>
 
@@ -82,6 +92,7 @@ export default function App() {
             editingItem={editingItem}
             onCreated={handleItemChanged}
             onCancelled={handleModalClose}
+            isDemo={isDemo}
           />
         </Suspense>
       </FormModal>

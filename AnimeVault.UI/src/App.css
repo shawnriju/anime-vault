@@ -371,6 +371,7 @@ body {
   margin-bottom: 0.3rem;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -1086,6 +1087,29 @@ body {
   background: #f0405f;
   transform: translateY(-1px);
   box-shadow: 0 8px 28px var(--accent-glow);
+}
+
+.btn-demo {
+  width: 100%;
+  margin-top: 0.75rem;
+  padding: 0.82rem;
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.92rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.btn-demo:hover {
+  background: var(--bg-elevated);
+  border-color: var(--border-hover);
+  color: var(--text-primary);
+  transform: translateY(-1px);
 }
 
 .login-card__footer {

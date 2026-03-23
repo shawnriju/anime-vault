@@ -3,7 +3,7 @@ import { EMPTY_FORM, MEDIA_TYPES, STATUSES_BY_TYPE } from "../../constants/anime
 import { createOrUpdateAnimeItem } from "../../services/animeService";
 import { toast } from "react-hot-toast";
 
-export function MediaForm({ onCreated, onCancelled, token, editingItem = null }) {
+export function MediaForm({ onCreated, onCancelled, token, editingItem = null, isDemo = false }) {
   const isEditing = editingItem !== null;
 
   const [form, setForm]       = useState(EMPTY_FORM);
@@ -50,8 +50,14 @@ export function MediaForm({ onCreated, onCancelled, token, editingItem = null })
     const toastId = toast.loading(isEditing ? "Updating entry..." : "Adding to collection...");
 
     try {
-      await createOrUpdateAnimeItem(form, token, editingItem?.id);
-      toast.success(isEditing ? "Entry updated!" : "Added to your collection!", { id: toastId });
+      if (isDemo) {
+        // Simulate network delay
+        await new Promise(resolve => setTimeout(resolve, 800));
+        toast.success(isEditing ? "Entry updated! (Demo mode)" : "Added to your collection! (Demo mode)", { id: toastId });
+      } else {
+        await createOrUpdateAnimeItem(form, token, editingItem?.id);
+        toast.success(isEditing ? "Entry updated!" : "Added to your collection!", { id: toastId });
+      }
       setForm(EMPTY_FORM);
       onCreated();
     } catch (err) {
