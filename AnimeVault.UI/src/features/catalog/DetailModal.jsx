@@ -6,7 +6,7 @@ import { toast } from "react-hot-toast";
 
 export function DetailModal({ item, token, onClose, onEdit, onDeleted }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [deleting, setDeleting]           = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const thumbnailUrl = item.coverImageUrl
     ? item.coverImageUrl.replace("/covers/", "/thumbnails/")
@@ -100,7 +100,7 @@ export function DetailModal({ item, token, onClose, onEdit, onDeleted }) {
             className="btn-submit"
             onClick={() => { onClose(); onEdit(item); }}
           >
-            Edit Entry
+            Edit
           </button>
 
           {!confirmDelete ? (

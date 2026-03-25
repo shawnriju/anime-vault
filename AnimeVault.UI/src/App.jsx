@@ -35,7 +35,14 @@ export default function App() {
       {/* Sticky Navbar */}
       <nav className="navbar">
         <div className="navbar__brand">
-          <div className="navbar__logo-mark">WL</div>
+          <div className="navbar__logo-mark shadow-lg shadow-pink-500/20 relative overflow-visible">
+            <span className="material-symbols-outlined text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>
+              movie_filter
+            </span>
+            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-secondary rounded flex items-center justify-center transform -rotate-12 border border-black/20 shadow-sm">
+                <span className="material-symbols-outlined text-[10px] text-white">done_all</span>
+            </div>
+          </div>
           <span className="navbar__title">
             WATCHED<span className="navbar__title--accent">LIST</span>
           </span>
