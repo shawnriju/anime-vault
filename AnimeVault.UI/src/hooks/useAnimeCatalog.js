@@ -39,7 +39,7 @@ const DUMMY_ITEMS = [
   }
 ];
 
-export function useAnimeCatalog(token, isDemo = false) {
+export function useAnimeCatalog(token, isDemo = false, onRestrictedAction) {
   const queryClient = useQueryClient();
   const [modalOpen, setModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
@@ -75,7 +75,8 @@ export function useAnimeCatalog(token, isDemo = false) {
 
   const handleEdit = (item) => {
     if (isDemo) {
-      toast.info("Editing is disabled in demo mode, but you can see the form layout.");
+      onRestrictedAction();
+      return;
     }
     setEditingItem(item);
     setModalOpen(true);
@@ -83,7 +84,8 @@ export function useAnimeCatalog(token, isDemo = false) {
 
   const handleAddClick = () => {
     if (isDemo) {
-      toast.info("Adding new entries is disabled in demo mode, but you can explore the form.");
+      onRestrictedAction();
+      return;
     }
     setEditingItem(null);
     setModalOpen(true);

@@ -4,7 +4,7 @@ import { StatusBadge, MediaTypeBadge } from "../../components/common/Badge";
 import { deleteAnimeItem } from "../../services/animeService";
 import { toast } from "react-hot-toast";
 
-export function DetailModal({ item, token, onClose, onEdit, onDeleted }) {
+export function DetailModal({ item, token, onClose, onEdit, onDeleted, isDemo, onRestrictedAction }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
@@ -19,6 +19,11 @@ export function DetailModal({ item, token, onClose, onEdit, onDeleted }) {
   }
 
   async function handleDelete() {
+    if (isDemo) {
+      onRestrictedAction();
+      setConfirmDelete(false);
+      return;
+    }
     setDeleting(true);
     const toastId = toast.loading("Deleting entry...");
     try {
@@ -98,7 +103,14 @@ export function DetailModal({ item, token, onClose, onEdit, onDeleted }) {
         <div className="detail-modal__actions">
           <button
             className="btn-submit"
-            onClick={() => { onClose(); onEdit(item); }}
+            onClick={() => { 
+              if (isDemo) {
+                onRestrictedAction();
+              } else {
+                onClose(); 
+                onEdit(item); 
+              }
+            }}
           >
             Edit
           </button>
@@ -106,7 +118,13 @@ export function DetailModal({ item, token, onClose, onEdit, onDeleted }) {
           {!confirmDelete ? (
             <button
               className="btn-delete-outline"
-              onClick={() => setConfirmDelete(true)}
+              onClick={() => {
+                if (isDemo) {
+                  onRestrictedAction();
+                } else {
+                  setConfirmDelete(true);
+                }
+              }}
             >
               Delete
             </button>

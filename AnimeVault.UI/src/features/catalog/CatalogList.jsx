@@ -6,7 +6,7 @@ import { ListCard } from "./ListCard";
 
 const DetailModal = lazy(() => import("./DetailModal").then(module => ({ default: module.DetailModal })));
 
-export function CatalogList({ items, token, onDeleted, onEdit }) {
+export function CatalogList({ items, token, onDeleted, onEdit, isDemo, onRestrictedAction }) {
   const [search,       setSearch]       = useState("");
   const [typeFilter,   setTypeFilter]   = useState("All");
   const [view,         setView]         = useState("grid"); // "grid" | "list"
@@ -136,9 +136,12 @@ export function CatalogList({ items, token, onDeleted, onEdit }) {
             onClose={handleDetailClose}
             onEdit={handleDetailEdit}
             onDeleted={handleDetailDeleted}
+            isDemo={isDemo}
+            onRestrictedAction={onRestrictedAction}
           />
         )}
       </Suspense>
     </section>
   );
 }
+

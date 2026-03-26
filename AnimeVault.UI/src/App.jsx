@@ -4,6 +4,7 @@ import { useAnimeCatalog } from "./hooks/useAnimeCatalog";
 import { FormModal } from "./components/common/Modal";
 import { CatalogList } from "./features/catalog/CatalogList";
 import { LoginScreen } from "./features/auth/LoginScreen";
+import { GuestRestrictionModal } from "./components/common/GuestRestrictionModal";
 import "./App.css";
 
 // Bundle code splitting for larger components
@@ -12,6 +13,10 @@ const MediaForm = lazy(() => import("./features/catalog/MediaForm").then(module 
 export default function App() {
   const { token, login, logout, loading: authLoading } = useAuth();
   const [isDemo, setIsDemo] = useState(false);
+  const [restrictionModalOpen, setRestrictionModalOpen] = useState(false);
+
+  const handleRestrictedAction = () => setRestrictionModalOpen(true);
+
   const {
     items,
     isLoading,
@@ -22,7 +27,7 @@ export default function App() {
     handleAddClick,
     handleModalClose,
     handleItemChanged,
-  } = useAnimeCatalog(token, isDemo);
+  } = useAnimeCatalog(token, isDemo, handleRestrictedAction);
 
   if (authLoading) return null;
 
@@ -83,6 +88,8 @@ export default function App() {
             token={token}
             onDeleted={handleItemChanged}
             onEdit={handleEdit}
+            isDemo={isDemo}
+            onRestrictedAction={handleRestrictedAction}
           />
         )}
       </main>
@@ -103,6 +110,16 @@ export default function App() {
           />
         </Suspense>
       </FormModal>
+
+      {/* Guest Restriction Modal */}
+      <GuestRestrictionModal 
+        open={restrictionModalOpen} 
+        onClose={() => setRestrictionModalOpen(false)}
+        onSignIn={() => {
+          setRestrictionModalOpen(false);
+          setIsDemo(false);
+        }}
+      />
     </div>
   );
 }
